@@ -1,0 +1,17 @@
+/cmake-build-*
+/.idea
+*.db
+*.vsidx
+*.db-shm
+*.sqlite
+*.obj
+*.ilk
+*.pdb
+doc/
+tests/
+out/
+ci/
+cmake/
+.vs/
+.git/
+*.yml
