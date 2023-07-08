@@ -1,4 +1,5 @@
 #include "lf.h"
+#include <stdio.h>
 
 #define error_closure(method, errorstr)						\
 int lf_##method##_closure(lua_State *L) {					\
@@ -34,6 +35,8 @@ error_closure(class__shr, "unexpected symbol near '>>'")
 error_closure(class__eq, "unexpected symbol near '=='")
 error_closure(class__lt, "unexpected symbol near '<' or '>'")
 error_closure(class__le, "unexpected symbol near '<=' or '>='")
+
+void lf_string__index_closure(lua_State *);
 
 void lf_rm_global(lua_State *L, const char *name) {
 	lua_pushnil(L);
@@ -89,10 +92,21 @@ void lf_generate_class(lua_State *L) {
 	lua_setglobal(L, "class");
 }
 
+void lf_improve_string(lua_State *L) {
+	lua_pushstring(L, "__index");
+	lua_getmetatable(L, -1);
+	lua_pushvalue(L, -2);
+	lua_getglobal(L, "string");
+	lua_pushcclosure(L, lf_string__index_closure, 1);
+	lua_rawset(L, -3);
+	lua_pop(L, 2);
+}
+
 void lf_extend(lua_State *L) {
 	lf_rm_global(L, "getmetatable");	// metatables are replaced by classes in lf
 	lf_rm_global(L, "setmetatable");	// metatables are replaced by classes in lf
 
+	lf_improve_string(L);
 	lf_generate_class(L);
 	//tonumber
 	//	select
@@ -184,4 +198,22 @@ int lf_extension_create_class(lua_State *L) {
 	/* create an empty userdata (similar to class) (used as a constructor or static functions only) */
 	/* set global variable to be uesrdata */
 	return 0;
+}
+
+void lf_string__index_closure(lua_State *L) {
+	if (lua_isstring(L, -1) && (!lua_isinteger(L, -1))) {
+		lua_getmetatable(L, -2);
+		lua_pushstring(L, "__index");
+		lua_rawget(L, -2);
+		lua_getupvalue(L, -1, 1);
+		lua_pushvalue(L, -4);
+		lua_rawget(L, -2);
+	}
+	else if (lua_isinteger(L, -1) && (lua_len(L, -2), lua_tointeger(L, -1)) >= lua_tointeger(L, -2)) {
+		if (lua_tointeger(L, -2) > 0) lua_pushlstring(L, &(lua_tostring(L, -3)[lua_tointeger(L, -2) - 1]), 1);
+		else if (lua_tointeger(L, -2) < 0) lua_pushlstring(L, &(lua_tostring(L, -3)[lua_tointeger(L, -1) + lua_tointeger(L, -2)]), 1);
+		else return 0;
+	}
+	else return 0;
+	return 1;
 }
