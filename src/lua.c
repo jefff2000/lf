@@ -5,6 +5,7 @@
 */
 
 // modified for the lf extension by Jeff
+// all modified lines are commented with "// lf extension"
 
 #define lua_c
 
@@ -17,7 +18,7 @@
 
 #include <signal.h>
 
-#include "lf.h"
+#include "lf.h" // lf extension
 
 #include "lauxlib.h"
 #include "lualib.h"
@@ -649,7 +650,7 @@ static int pmain (lua_State *L) {
     if (handle_script(L, argv + script) != LUA_OK)
       return 0;  /* interrupt in case of error */
   }
-  lf_extend(L); // extending lua to lf
+  lf_extend(L); // lf extension
   if (args & has_i)  /* -i option? */
     doREPL(L);  /* do read-eval-print loop */
   else if (script < 1 && !(args & (has_e | has_v))) { /* no active option? */

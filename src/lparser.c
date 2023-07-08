@@ -856,10 +856,16 @@ static void recfield (LexState *ls, ConsControl *cc) {
   else  /* ls->t.token == '[' */
     yindex(ls, &key);
   cc->nh++;
-  checknext(ls, '=');
-  tab = *cc->t;
-  luaK_indexed(fs, &tab, &key);
-  expr(ls, &val);
+  if (ls->t.token == '=') {         // lf extension
+      luaX_next(ls);                // lf extension
+      tab = *cc->t;                 // lf extension
+      luaK_indexed(fs, &tab, &key); // lf extension
+      expr(ls, &val);               // lf extension
+  } else {                          // lf extension
+      tab = *cc->t;                 // lf extension
+      luaK_indexed(fs, &tab, &key); // lf extension
+      init_exp(&val, VTRUE, 0);     // lf extension
+  }                                 // lf extension
   luaK_storevar(fs, &tab, &val);
   fs->freereg = reg;  /* free registers */
 }
@@ -902,12 +908,13 @@ static void listfield (LexState *ls, ConsControl *cc) {
 
 static void field (LexState *ls, ConsControl *cc) {
   /* field -> listfield | recfield */
+  int lookahead; // lf extension
   switch(ls->t.token) {
     case TK_NAME: {  /* may be 'listfield' or 'recfield' */
-      if (luaX_lookahead(ls) != '=')  /* expression? */
-        listfield(ls, cc);
-      else
-        recfield(ls, cc);
+      if ((lookahead = luaX_lookahead(ls)) == '=' || lookahead == ';')  /* expression? */       // lf extension
+        recfield(ls, cc);                                                                       // lf extension
+      else                                                                                      // lf extension
+        listfield(ls, cc);                                                                      // lf extension
       break;
     }
     case '[': {
